@@ -61,11 +61,44 @@ echo ""
 # Get all scene names from JSON
 SCENE_NAMES=$(python3 -c "
 import json
-with open('${JSON_SPLIT_PATH}', 'r') as f:
-    data = json.load(f)
-for scene in data['scenes'].keys():
-    print(scene)
-")
+import sys
+
+try:
+    with open('${JSON_SPLIT_PATH}', 'r') as f:
+        data = json.load(f)
+    
+    # Handle different JSON formats
+    if isinstance(data, dict) and 'scenes' in data:
+        # Format: {'scenes': {'scene1': [...], 'scene2': [...]}}
+        for scene in data['scenes'].keys():
+            print(scene)
+    elif isinstance(data, list):
+        # Format: ['scene1', 'scene2', ...]
+        for scene in data:
+            print(scene)
+    elif isinstance(data, dict):
+        # Format: {'scene1': [...], 'scene2': [...]}
+        for scene in data.keys():
+            print(scene)
+    else:
+        print('ERROR: Unsupported JSON format', file=sys.stderr)
+        sys.exit(1)
+        
+except Exception as e:
+    print(f'ERROR: {e}', file=sys.stderr)
+    sys.exit(1)
+" 2>&1)
+
+# Check for errors in Python output
+if echo "${SCENE_NAMES}" | grep -q "^ERROR:"; then
+    echo "❌ Error parsing JSON: ${SCENE_NAMES}"
+    echo ""
+    echo "Expected JSON format (one of):"
+    echo "  1. {\"scenes\": {\"scene1\": [...], \"scene2\": [...]}}"
+    echo "  2. [\"scene1\", \"scene2\", ...]"
+    echo "  3. {\"scene1\": [...], \"scene2\": [...]}"
+    exit 1
+fi
 
 if [ -z "${SCENE_NAMES}" ]; then
     echo "❌ Error: No scenes found in JSON"

@@ -26,8 +26,9 @@ DATA_BASE_DIR="$3"
 OUTPUT_BASE_DIR="$4"
 
 SCENE_DATA_DIR="${DATA_BASE_DIR}/${SCENE_NAME}"
-VANILLA_3DGS_DIR="/home/runw/project/gaussian-splatting"
-FEATURE_3DGS_METRICS="/home/runw/project/feature-3dgs/metrics.py"  # For depth evaluation
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VANILLA_3DGS_DIR="${SCRIPT_DIR}"
+FEATURE_3DGS_METRICS="$(dirname ${SCRIPT_DIR})/feature-3dgs/metrics.py"  # For depth evaluation
 
 # Training parameters for vanilla 3DGS
 ITERATIONS=30000
@@ -40,6 +41,19 @@ TEST_ITERATIONS="7000 30000"
 
 if [ ! -d "${SCENE_DATA_DIR}" ]; then
     echo "❌ Error: Scene data directory not found: ${SCENE_DATA_DIR}"
+    echo ""
+    echo "Available scenes in ${DATA_BASE_DIR}:"
+    ls -1 "${DATA_BASE_DIR}" 2>/dev/null | head -10 | sed 's/^/  - /'
+    [ $(ls -1 "${DATA_BASE_DIR}" 2>/dev/null | wc -l) -gt 10 ] && echo "  ... (and more)"
+    exit 1
+fi
+
+# Validate scene structure
+if [ ! -d "${SCENE_DATA_DIR}/images" ] && [ ! -d "${SCENE_DATA_DIR}/sparse" ]; then
+    echo "❌ Error: Scene directory doesn't have expected structure"
+    echo "   Expected: ${SCENE_DATA_DIR}/images/ or ${SCENE_DATA_DIR}/sparse/"
+    echo "   Found:"
+    ls -la "${SCENE_DATA_DIR}" | sed 's/^/     /'
     exit 1
 fi
 
@@ -63,13 +77,42 @@ echo ""
 # Get number of cases for this scene
 NUM_CASES=$(python3 -c "
 import json
-with open('${JSON_SPLIT_PATH}', 'r') as f:
-    data = json.load(f)
-if '${SCENE_NAME}' in data['scenes']:
-    print(len(data['scenes']['${SCENE_NAME}']))
-else:
+import sys
+
+try:
+    with open('${JSON_SPLIT_PATH}', 'r') as f:
+        data = json.load(f)
+    
+    scene_name = '${SCENE_NAME}'
+    
+    # Handle different JSON formats
+    if isinstance(data, dict) and 'scenes' in data:
+        # Format: {'scenes': {'scene1': [...], 'scene2': [...]}}
+        if scene_name in data['scenes']:
+            print(len(data['scenes'][scene_name]))
+        else:
+            print(0)
+    elif isinstance(data, dict):
+        # Format: {'scene1': [...], 'scene2': [...]}
+        if scene_name in data:
+            print(len(data[scene_name]))
+        else:
+            print(0)
+    else:
+        # List format - can't get cases count
+        print(1)  # Assume 1 case per scene
+        
+except Exception as e:
+    print(f'ERROR: {e}', file=sys.stderr)
     print(0)
-")
+" 2>&1)
+
+# Check if NUM_CASES is a valid number
+if ! [[ "${NUM_CASES}" =~ ^[0-9]+$ ]]; then
+    echo "❌ Error: Invalid NUM_CASES value: ${NUM_CASES}"
+    echo "   This might be a JSON parsing error"
+    exit 1
+fi
 
 if [ "${NUM_CASES}" -eq 0 ]; then
     echo "❌ Error: Scene ${SCENE_NAME} not found in JSON or has no cases"
