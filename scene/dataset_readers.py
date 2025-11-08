@@ -142,7 +142,7 @@ def storePly(path, xyz, rgb):
     ply_data = PlyData([vertex_element])
     ply_data.write(path)
 
-def readColmapSceneInfo(path, images, depths, eval, train_test_exp, llffhold=8):
+def readColmapSceneInfo(path, images, depths, eval, train_test_exp, json_split_path=None, case_id=-1, llffhold=8):
     try:
         cameras_extrinsic_file = os.path.join(path, "sparse/0", "images.bin")
         cameras_intrinsic_file = os.path.join(path, "sparse/0", "cameras.bin")
@@ -177,9 +177,55 @@ def readColmapSceneInfo(path, images, depths, eval, train_test_exp, llffhold=8):
             sys.exit(1)
 
     if eval:
-        if "360" in path:
-            llffhold = 8
-        if llffhold:
+        # JSON-based split (if provided)
+        if json_split_path and os.path.exists(json_split_path):
+            print("------------JSON SPLIT-------------")
+            scene_name = os.path.basename(path)
+            
+            with open(json_split_path, 'r') as f:
+                split_data = json.load(f)
+            
+            if scene_name not in split_data['scenes']:
+                raise ValueError(f"Scene {scene_name} not found in JSON split file")
+            
+            scene_cases = split_data['scenes'][scene_name]
+            
+            # Select specific case or collect all cases
+            if case_id >= 0 and case_id < len(scene_cases):
+                cases_to_use = [scene_cases[case_id]]
+                print(f"Using case {case_id} from JSON split")
+            else:
+                cases_to_use = scene_cases
+                print(f"Using all {len(cases_to_use)} cases from JSON split")
+            
+            # Collect ref_views (train) and target_views (test)
+            train_names_list = []
+            test_names_list = []
+            for case in cases_to_use:
+                if 'ref_views' in case:
+                    train_names_list.extend(case['ref_views'])
+                if 'target_views' in case:
+                    test_names_list.extend(case['target_views'])
+            
+            # Remove duplicates while preserving order
+            train_names_list = list(dict.fromkeys(train_names_list))
+            test_names_list = list(dict.fromkeys(test_names_list))
+            
+            # Add extensions to match COLMAP names
+            cam_names = [cam_extrinsics[cam_id].name for cam_id in cam_extrinsics]
+            extensions_by_basename = {}
+            for name in cam_names:
+                basename = os.path.splitext(name)[0]
+                extensions_by_basename[basename] = name
+            
+            test_cam_names_list = [extensions_by_basename.get(name, name + '.png') for name in test_names_list]
+            
+            print(f"  Train views: {len(train_names_list)}")
+            print(f"  Test views:  {len(test_names_list)}")
+        # Default LLFF split
+        elif "360" in path or llffhold:
+            if "360" in path:
+                llffhold = 8
             print("------------LLFF HOLD-------------")
             cam_names = [cam_extrinsics[cam_id].name for cam_id in cam_extrinsics]
             cam_names = sorted(cam_names)

@@ -56,6 +56,8 @@ class ModelParams(ParamGroup):
         self.train_test_exp = False
         self.data_device = "cuda"
         self.eval = False
+        self.json_split_path = ""  # Path to JSON file for custom train/test split (empty string = disabled)
+        self.case_id = -1  # Case ID to select from JSON split (-1 = use all cases)
         super().__init__(parser, "Loading Parameters", sentinel)
 
     def extract(self, args):

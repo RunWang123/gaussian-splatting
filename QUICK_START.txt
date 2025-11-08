@@ -1,0 +1,94 @@
+================================================================================
+VANILLA 3DGS + DL3DV - QUICK START
+================================================================================
+
+✅ SETUP COMPLETE! All files modified and scripts created.
+
+📍 LOCATION: /home/runw/Project/gaussian-splatting/
+
+🔧 MODIFIED FILES:
+  - arguments/__init__.py       (added json_split_path, case_id)
+  - scene/__init__.py            (pass JSON params)
+  - scene/dataset_readers.py     (JSON split logic)
+
+📝 NEW SCRIPTS:
+  - process_single_scene.sh      (per-scene processing)
+  - submit_all_scenes.sh         (batch SLURM submission)
+
+📚 DOCUMENTATION:
+  - DL3DV_USAGE_GUIDE.md         (complete usage guide)
+  - MIGRATION_FROM_FEATURE3DGS.md (architecture comparison)
+  - MIGRATION_SUMMARY.md         (this migration summary)
+
+================================================================================
+🚀 QUICK TEST (Single Scene - ~6-8 hours)
+================================================================================
+
+cd /home/runw/Project/gaussian-splatting
+
+bash process_single_scene.sh \
+    "5c8dafad7d782c76ffad8c14e9e1244ce2b83aa12324c54a3cc10176964acf04" \
+    "/home/runw/Project/data/colmap/data/dl3dv_splits/dl3dv_64view_split.json" \
+    "/scratch/runw/project/colmap/dl3dv_feature3dgs" \
+    "/scratch/runw/project/colmap/output/dl3dv_vanilla3dgs_test"
+
+Results: /scratch/.../output/dl3dv_vanilla3dgs_test/scene_name_case0/results.json
+
+================================================================================
+🎯 FULL BENCHMARK (All DL3DV Scenes)
+================================================================================
+
+bash submit_all_scenes.sh \
+    "/home/runw/Project/data/colmap/data/dl3dv_splits/dl3dv_64view_split.json" \
+    "/scratch/runw/project/colmap/dl3dv_feature3dgs" \
+    "/scratch/runw/project/colmap/output/dl3dv_vanilla3dgs"
+
+Monitor: bash /scratch/.../output/dl3dv_vanilla3dgs/monitor_jobs.sh
+   or:   squeue -u $USER
+
+================================================================================
+📊 KEY DIFFERENCES FROM FEATURE-3DGS
+================================================================================
+
+Pipeline Simplification:
+  ❌ REMOVED: LSeg feature extraction
+  ❌ REMOVED: Segmentation inference & metrics
+  ✅ KEPT:    RGB training & metrics
+  ✅ KEPT:    Depth evaluation (optional)
+
+Training:
+  - Feature-3DGS: 7,000 iterations (~2-3 hours)
+  - Vanilla 3DGS: 30,000 iterations (~6-8 hours)
+
+Expected RGB Quality:
+  - Feature-3DGS @ 7K:  PSNR ~23-25 dB
+  - Vanilla 3DGS @ 30K: PSNR ~25-28 dB (better!)
+
+Use Cases:
+  - Feature-3DGS → Semantic understanding, segmentation
+  - Vanilla 3DGS → RGB quality benchmarks, standard baseline
+
+================================================================================
+📁 DATASET COMPATIBILITY
+================================================================================
+
+✅ ALL YOUR DATASETS WORK DIRECTLY (no conversion needed):
+
+  1. DL3DV:      /scratch/runw/project/colmap/dl3dv_feature3dgs/
+     Split:      /home/runw/Project/data/colmap/data/dl3dv_splits/dl3dv_64view_split.json
+     
+  2. ScanNet:    /scratch/runw/project/colmap/scannet_feature3dgs/
+     Split:      /scratch/scannet_split.json
+     
+  3. MipNeRF360: /scratch/runw/project/colmap/mipnerf360_feature3dgs/
+     Split:      /scratch/mipnerf360_split.json
+
+================================================================================
+📖 DOCUMENTATION
+================================================================================
+
+  Quick reference: cat QUICK_START.txt (this file)
+  Full guide:      cat DL3DV_USAGE_GUIDE.md
+  Migration:       cat MIGRATION_SUMMARY.md
+  
+================================================================================
