@@ -52,12 +52,12 @@ echo ""
 # Activate conda environment
 if [ -f "${HOME}/miniconda/etc/profile.d/conda.sh" ]; then
     source "${HOME}/miniconda/etc/profile.d/conda.sh"
-    conda activate gaussian_splatting
-    echo "✅ Conda environment activated: gaussian_splatting"
+    conda activate feature_3dgs
+    echo "✅ Conda environment activated: feature_3dgs"
 elif [ -f "${HOME}/anaconda3/etc/profile.d/conda.sh" ]; then
     source "${HOME}/anaconda3/etc/profile.d/conda.sh"
-    conda activate gaussian_splatting
-    echo "✅ Conda environment activated: gaussian_splatting"
+    conda activate feature_3dgs
+    echo "✅ Conda environment activated: feature_3dgs"
 else
     echo "⚠️  Warning: Could not find conda initialization script"
     echo "   Assuming environment is already activated"
