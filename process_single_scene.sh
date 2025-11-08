@@ -26,8 +26,8 @@ DATA_BASE_DIR="$3"
 OUTPUT_BASE_DIR="$4"
 
 SCENE_DATA_DIR="${DATA_BASE_DIR}/${SCENE_NAME}"
-VANILLA_3DGS_DIR="/home/runw/Project/gaussian-splatting"
-FEATURE_3DGS_METRICS="/home/runw/Project/feature-3dgs/metrics.py"  # For depth evaluation
+VANILLA_3DGS_DIR="/home/runw/project/gaussian-splatting"
+FEATURE_3DGS_METRICS="/home/runw/project/feature-3dgs/metrics.py"  # For depth evaluation
 
 # Training parameters for vanilla 3DGS
 ITERATIONS=30000
