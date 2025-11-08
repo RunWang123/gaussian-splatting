@@ -1,4 +1,4 @@
-##!/bin/bash
+#!/bin/bash
 #SBATCH -J feature-3dgs-scene-processing
 #SBATCH -p mri2020
 #SBATCH --time=24:00:00
