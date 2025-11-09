@@ -3,7 +3,7 @@
 # Process all cases for a single scene with vanilla 3D Gaussian Splatting
 # Usage: bash process_single_scene.sh <scene_name> <json_split_path> <data_base_dir> <output_base_dir>
 #
-# Simplified version (no segmentation, no LSeg features)
+# This script now supports JSON split files with multiple cases, just like feature-3dgs!
 
 # NOTE: We don't use 'set -e' here so that if one case fails,
 # we continue processing other cases.
@@ -28,7 +28,6 @@ OUTPUT_BASE_DIR="$4"
 SCENE_DATA_DIR="${DATA_BASE_DIR}/${SCENE_NAME}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VANILLA_3DGS_DIR="${SCRIPT_DIR}"
-FEATURE_3DGS_METRICS="$(dirname ${SCRIPT_DIR})/feature-3dgs/metrics.py"  # For depth evaluation
 
 # Training parameters for vanilla 3DGS
 ITERATIONS=30000
@@ -244,40 +243,6 @@ for CASE_ID in $(seq 0 $((NUM_CASES - 1))); do
         fi
         
         # ----------------------------------------------------------------
-        # Step 4: Depth Metrics (if GT depth exists)
-        # ----------------------------------------------------------------
-        echo ""
-        echo "----------------------------------------"
-        echo "Step 4: Depth Metrics (Case ${CASE_ID})"
-        echo "----------------------------------------"
-        
-        GT_DEPTH_DIR="${SCENE_DATA_DIR}/depths"
-        if [ -d "${GT_DEPTH_DIR}" ]; then
-            echo "✅ Found GT depth directory: ${GT_DEPTH_DIR}"
-            echo "Evaluating depth metrics on TRAINING views (0.1m-100m range, median norm)..."
-            
-            # Use feature-3dgs metrics.py for depth evaluation
-            cd "${VANILLA_3DGS_DIR}" || exit 1
-            python "${FEATURE_3DGS_METRICS}" \
-                -m "${CASE_OUTPUT_DIR}" \
-                --eval_depth \
-                --gt_depth_dir "${GT_DEPTH_DIR}" \
-                --json_split_path "${JSON_SPLIT_PATH}" \
-                --case_id ${CASE_ID} \
-                2>&1
-            
-            DEPTH_STATUS=$?
-            if [ ${DEPTH_STATUS} -ne 0 ]; then
-                echo "⚠️  Depth metrics computation failed"
-            else
-                echo "✅ Depth metrics computed"
-            fi
-        else
-            echo "ℹ️  No GT depth directory found: ${GT_DEPTH_DIR}"
-            echo "   Skipping depth evaluation (dataset may not provide GT depth)"
-        fi
-        
-        # ----------------------------------------------------------------
         # Case summary
         # ----------------------------------------------------------------
         echo ""
@@ -322,4 +287,3 @@ else
     echo "✅ All cases processed successfully!"
     exit 0
 fi
-
