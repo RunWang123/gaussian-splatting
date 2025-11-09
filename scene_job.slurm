@@ -1,14 +1,14 @@
 #!/bin/bash
 #SBATCH -J vanilla-3dgs-scene-processing
-#SBATCH -p gpu
-#SBATCH --time=48:00:00
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=64gb
-#SBATCH --gpus-per-node=1
-#SBATCH -o slurm_%j.out
-#SBATCH -e slurm_%j.err
+#SBATCH -p mri2020
+#SBATCH --time=24:00:00
+#SBATCH --nodes=1                     # 1 nodes for mini dataset
+#SBATCH --ntasks-per-node=1           # 1 GPUs per node
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=100gb                   # Reduced memory
+#SBATCH --gpus-per-node=a100:1        # 1 A100 GPUs
+#SBATCH -o /scratch/runw/project/colmap/work_dirs/palmetto_log/slurm_%j.out
+#SBATCH -e /scratch/runw/project/colmap/work_dirs/palmetto_log/slurm_%j.err
 
 
 
